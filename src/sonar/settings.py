@@ -27,11 +27,21 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+# Sonar settings
+AUTH_USER_MODEL = 'user.User'
+PING_LENGTH = 140
 
+# DRF settings
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+    ]
+}
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
+    'rest_framework',
+    'user',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
