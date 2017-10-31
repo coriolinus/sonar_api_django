@@ -1,8 +1,9 @@
+from user.models import User
+
 from common.permissions import IsOwnerOrReadOnly
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import mixins, serializers, viewsets
 from rest_framework.authtoken.models import Token
-from user.models import User
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
