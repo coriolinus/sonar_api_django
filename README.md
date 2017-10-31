@@ -10,7 +10,7 @@ These features need to be implemented in order for me to consider this a complet
 
 - [X] user signup / authentication
 - [X] user profiles (handle, real name, brief bio)
-- [ ] user can create a `ping`: short message up to 140 chars
+- [X] user can create a `ping`: short message up to 140 chars
 - [ ] user view showing most recent pings
 - [ ] follow another user
 - [ ] timeline view showing your pings and those of those people you follow
