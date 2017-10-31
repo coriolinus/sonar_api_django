@@ -54,8 +54,8 @@ class IsOwnerOrReadOnly(permissions.IsAuthenticatedOrReadOnly):
 
     ```python
     class User_IOORO(IsOwnerOrReadOnly):
-        def get_owner(self):
-            return self
+        def get_owner(self, obj):
+            return obj
 
     class UserViewSet(ModelViewSet):
         permission_classes = (User_IOORO,)
@@ -64,9 +64,12 @@ class IsOwnerOrReadOnly(permissions.IsAuthenticatedOrReadOnly):
     """
     OWNER_FIELD = 'user'
 
-    def get_owner(self):
-        return getattr(self, self.OWNER_FIELD)
+    def get_owner(self, obj):
+        """
+        Get the owner of the supplied `obj` object.
+        """
+        return getattr(obj, self.OWNER_FIELD)
 
     def has_object_permission(self, request, view, obj):
         return (request.method in permissions.SAFE_METHODS or
-                request.user == obj.get_owner())
+                request.user == self.get_owner(obj))

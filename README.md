@@ -8,8 +8,8 @@ _We're not just ships passing in the night; we're submarines lost in the depths,
 
 These features need to be implemented in order for me to consider this a complete demo project.
 
-- [ ] user signup / authentication
-- [ ] user profiles (handle, real name, brief bio)
+- [X] user signup / authentication
+- [X] user profiles (handle, real name, brief bio)
 - [ ] user can create a `ping`: short message up to 140 chars
 - [ ] user view showing most recent pings
 - [ ] follow another user

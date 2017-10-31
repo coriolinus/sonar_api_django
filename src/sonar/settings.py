@@ -35,12 +35,17 @@ PING_LENGTH = 140
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
-    ]
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ),
 }
 # Application definition
 
 INSTALLED_APPS = [
     'rest_framework',
+    'rest_framework.authtoken',
     'user',
     'django.contrib.auth',
     'django.contrib.contenttypes',

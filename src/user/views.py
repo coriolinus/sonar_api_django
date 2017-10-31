@@ -1,5 +1,7 @@
 from common.permissions import IsOwnerOrReadOnly
+from django.contrib.auth.password_validation import validate_password
 from rest_framework import mixins, serializers, viewsets
+from rest_framework.authtoken.models import Token
 from user.models import User
 
 
@@ -20,10 +22,37 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
             'blurb',
         )
 
+        read_only_fields = (
+            'username',
+        )
+
+
+class CreateUserSerializer(UserSerializer):
+    token = serializers.SerializerMethodField()
+
+    class Meta(UserSerializer.Meta):
+        fields = UserSerializer.Meta.fields + (
+            'password',
+            'token',
+        )
+
+        extra_kwargs = {'password': {'write_only': True}}
+
+        read_only_fields = (
+            'token',
+        )
+
+    def validate_password(self, pw):
+        validate_password(pw)
+        return pw
+
+    def get_token(self, user):
+        return Token.objects.get_or_create(user=user)[0].key
+
 
 class User_IOORO(IsOwnerOrReadOnly):
-    def get_owner(self):
-        return self
+    def get_owner(self, obj):
+        return obj
 
     def has_permission(self, request, view):
         """
@@ -45,6 +74,19 @@ class UserViewSet(mixins.CreateModelMixin,
     a complete user list.
     """
     queryset = User.objects.all()
-    serializer_class = UserSerializer
     permission_classes = (User_IOORO,)
     lookup_field = 'username'
+
+    def get_serializer_class(self):
+        "Use the appropriate serializer class"
+        if self.request.method == 'POST':
+            return CreateUserSerializer
+        return UserSerializer
+
+    def perform_create(self, serializer):
+        """
+        Override perform_create to use the create_user function.
+
+        This means that i.e. the password gets set appropriately
+        """
+        serializer.instance = User.objects.create_user(**serializer.validated_data)
