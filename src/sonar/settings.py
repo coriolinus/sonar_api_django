@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'user',
+    'ping',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
