@@ -28,6 +28,7 @@ These features need to be implemented in order for me to consider this a complet
 
 These features would be great, but probably won't happen unless this starts to get a real userbase.
 
+- [ ] proper property-based testing (see note below)
 - [ ] users can 'like' pings
 - [ ] liked pings view
 - [ ] users can 'echo' (retweet) pings. probably just links to it; we don't want the one-button retweet culture from twitter.
@@ -38,6 +39,10 @@ These features would be great, but probably won't happen unless this starts to g
 - [ ] inline photos / video
 - [ ] log in with twitter to import your contacts
 - [ ] twitter bot using sentiment analysis and search to find tweets criticizing twitter, ideally for non-linear-timeline or terrible troll issues, and suggesting sonar as a replacement.
+
+## Property-based testing
+
+Property-based tests are great, and I've had good results using the [Hypothesis](https://hypothesis.readthedocs.io/en/latest/) library to test REST APIs in the past. However, they take some additional time to implement. However, they do take additional time to implement. I really like them in production code. This, however, is not production code, and it's difficult to justify the additional time that property-based tests require in a demo project.
 
 ## Architecture
 
