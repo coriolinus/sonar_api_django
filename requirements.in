@@ -1,0 +1,3 @@
+pip-tools                       # required for pip-compile
+django                          # web framework
+djangorestframework             # REST framework
