@@ -11,12 +11,13 @@ These features need to be implemented in order for me to consider this a complet
 - [X] user signup / authentication
 - [X] user profiles (handle, real name, brief bio)
 - [X] user can create a `ping`: short message up to 140 chars
+- [X] individual ping permalink view
 - [X] user timeline view showing most recent pings
-- [ ] follow another user
+- [X] timeline will only ever be linear
+- [X] follow another user
+- [X] unfollow another user
 - [ ] timeline view showing your pings and those of those people you follow
-- [ ] timeline will only ever be linear
 - [ ] http addresses auto-expand into links
-- [ ] individual ping permalink view
 - [ ] individual ping replies view
 - [ ] user tags link to user view
 - [ ] mentions view showing people writing about you

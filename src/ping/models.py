@@ -24,3 +24,6 @@ class Ping(models.Model):
             MinLengthValidator(1),
         ),
     )
+
+    def __repr__(self):
+        return "<Ping: {} @ {}>".format(self.user, self.created.isoformat())
