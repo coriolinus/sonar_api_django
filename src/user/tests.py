@@ -1,5 +1,6 @@
 from user.models import User
 
+from common.testing import auth_key
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.authtoken.models import Token
@@ -77,11 +78,10 @@ class UserTests(APITestCase):
 
         # now use the correct credentials
         token = Token.objects.get(user__username='test_user')
-        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
-        response = self.client.patch(url,
-                                     patch_data,
-                                     format='json')
-        self.client.credentials()
+        with auth_key(self.client, token.key) as auth_client:
+            response = auth_client.patch(url,
+                                         patch_data,
+                                         format='json')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         for key in patch_data.keys():
@@ -95,17 +95,14 @@ class UserTests(APITestCase):
         url = response.data['url']
 
         token = Token.objects.get(user__username='test_user')
-        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
-
-        response = self.client.patch(
-            url,
-            {
-                'username': 'not_the_test_user'
-            },
-            format='json',
-        )
-
-        self.client.credentials()
+        with auth_key(self.client, token.key) as auth_client:
+            response = auth_client.patch(
+                url,
+                {
+                    'username': 'not_the_test_user'
+                },
+                format='json',
+            )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(User.objects.count(), 1)
@@ -129,9 +126,8 @@ class UserTests(APITestCase):
 
         patch_data = {'blurb': 'b;alwkerjfaklsweuhj'}
 
-        self.client.credentials(HTTP_AUTHORIZATION='Token ' + user2token)
-        response = self.client.patch(user1url, patch_data, format='json')
-        self.client.credentials()
+        with auth_key(self.client, user2token) as auth_client:
+            response = auth_client.patch(user1url, patch_data, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(User.objects.get(username='test_user_1').blurb, '')
