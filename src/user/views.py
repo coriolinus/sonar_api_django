@@ -2,8 +2,13 @@ from user.models import User
 
 from common.permissions import IsOwnerOrReadOnly
 from django.contrib.auth.password_validation import validate_password
+from ping.models import Ping
+from ping.views import PingSerializer
 from rest_framework import mixins, serializers, viewsets
 from rest_framework.authtoken.models import Token
+from rest_framework.decorators import detail_route
+from rest_framework.pagination import CursorPagination
+from rest_framework.response import Response
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
@@ -62,6 +67,10 @@ class User_IOORO(IsOwnerOrReadOnly):
         return request.method == 'POST' or super().has_permission(request, view)
 
 
+class TimelinePagination(CursorPagination):
+    page_size = 128
+
+
 class UserViewSet(mixins.CreateModelMixin,
                   mixins.RetrieveModelMixin,
                   mixins.UpdateModelMixin,
@@ -91,3 +100,30 @@ class UserViewSet(mixins.CreateModelMixin,
         This means that i.e. the password gets set appropriately
         """
         serializer.instance = User.objects.create_user(**serializer.validated_data)
+
+    @property
+    def timeline_paginator(self):
+        "Paginator for use with the timeline"
+        if not hasattr(self, '_paginator'):
+            self._paginator = TimelinePagination()
+        return self._paginator
+
+    @detail_route()
+    def timeline(self, request, username):
+        """
+        View providing a paginated list of a user's most recent pings.
+        """
+        # DRF pagination is not well documented; this code was assembled by
+        # frankensteining together bits from rest_framework.mixins.ListModelMixin,
+        # and rest_framework.generics.GenericAPIView.
+        # It appears to work, but at this would be an excellent candidate for
+        # proper stress-testing at some point.
+        user = self.get_object()
+        pings_qs = Ping.objects.filter(user=user)
+        page = self.timeline_paginator.paginate_queryset(pings_qs, request)
+        serializer = PingSerializer(
+            page,
+            many=True,
+            context={'request': request},
+        )
+        return self.timeline_paginator.get_paginated_response(serializer.data)
