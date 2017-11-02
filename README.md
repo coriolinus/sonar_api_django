@@ -4,9 +4,7 @@ _We're not just ships passing in the night; we're submarines lost in the depths,
 
 `sonar` is a basic Twitter clone, intended to run on a free-tier AWS stack as a demonstration project for my portfolio. Still, maybe it could take off and turn me into an internet billionaire, right?
 
-## Intended features
-
-These features need to be implemented in order for me to consider this a complete demo project.
+## Minimum Viable Product
 
 - [X] user signup / authentication
 - [X] user profiles (handle, real name, brief bio)
@@ -19,11 +17,13 @@ These features need to be implemented in order for me to consider this a complet
 - [X] timeline view showing your pings and those of those people you follow
 - [X] reply to a previous ping
 - [X] individual ping replies view
-- [ ] http addresses auto-expand into links
-- [ ] user tags link to user view
-- [ ] user notifications on tagging
-- [ ] mentions view showing people writing about you
-- [ ] block another user (they cannot see you; you cannot see them)
+
+## Demo Features
+
+These features need to be implemented in order for me to consider this a complete demo project.
+
+- [ ] mentions view showing people writing about/to you
+- [ ] block another user (they cannot see you when logged in; you cannot see them when logged in)
 - [ ] hashtags / hashtag search view
 
 ## Horizon features
@@ -39,6 +39,8 @@ These features would be great, but probably won't happen unless this starts to g
 - [ ] general search
 - [ ] report a ping/user (don't want to take twitter's cavalier attitude against the trolls)
 - [ ] inline photos / video
+- [ ] http addresses auto-expand into links (likely to get pushed to the front end)
+- [ ] user tags link to user view (likely to get pushed to the front end)
 - [ ] log in with twitter to import your contacts
 - [ ] twitter bot using sentiment analysis and search to find tweets criticizing twitter, ideally for non-linear-timeline or terrible troll issues, and suggesting sonar as a replacement.
 
