@@ -19,10 +19,12 @@ from django.conf.urls import url
 from ping.views import PingViewSet
 from rest_framework import routers
 from rest_framework.authtoken.views import obtain_auth_token
+from timeline.views import TimelineViewSet
 
 router = routers.DefaultRouter()
 router.register(r'users', UserViewSet)
 router.register(r'pings', PingViewSet)
+router.register(r'timeline', TimelineViewSet, 'timeline')
 
 urlpatterns = router.urls
 urlpatterns += [

@@ -1,5 +1,6 @@
 from user.models import Follows, User
 
+from common.pagination import Pagination128
 from common.permissions import IsOwnerOrReadOnly
 from django.contrib.auth.password_validation import validate_password
 from ping.models import Ping
@@ -7,7 +8,6 @@ from ping.views import PingSerializer
 from rest_framework import mixins, serializers, status, viewsets
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import detail_route, list_route
-from rest_framework.pagination import CursorPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -92,10 +92,6 @@ class User_IOORO(IsOwnerOrReadOnly):
         return request.method == 'POST' or super().has_permission(request, view)
 
 
-class Pagination128(CursorPagination):
-    page_size = 128
-
-
 class UserPaginator(Pagination128):
     ordering = '-date_joined'
 
@@ -162,7 +158,7 @@ class UserViewSet(mixins.CreateModelMixin,
         # It appears to work, but at this would be an excellent candidate for
         # proper stress-testing at some point.
         user = self.get_object()
-        pings_qs = Ping.objects.filter(user=user)
+        pings_qs = Ping.objects.filter(user=user).select_related('user')
         page = self.timeline_paginator.paginate_queryset(pings_qs, request)
         serializer = PingSerializer(
             page,

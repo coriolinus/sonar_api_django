@@ -16,7 +16,7 @@ These features need to be implemented in order for me to consider this a complet
 - [X] timeline will only ever be linear
 - [X] follow another user
 - [X] unfollow another user
-- [ ] timeline view showing your pings and those of those people you follow
+- [X] timeline view showing your pings and those of those people you follow
 - [ ] http addresses auto-expand into links
 - [ ] individual ping replies view
 - [ ] user tags link to user view
