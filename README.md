@@ -17,12 +17,13 @@ These features need to be implemented in order for me to consider this a complet
 - [X] follow another user
 - [X] unfollow another user
 - [X] timeline view showing your pings and those of those people you follow
+- [X] reply to a previous ping
+- [X] individual ping replies view
 - [ ] http addresses auto-expand into links
-- [ ] individual ping replies view
 - [ ] user tags link to user view
+- [ ] user notifications on tagging
 - [ ] mentions view showing people writing about you
 - [ ] block another user (they cannot see you; you cannot see them)
-- [ ] user notifications on tagging
 - [ ] hashtags / hashtag search view
 
 ## Horizon features

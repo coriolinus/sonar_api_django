@@ -24,6 +24,14 @@ class Ping(models.Model):
             MinLengthValidator(1),
         ),
     )
+    replying_to = models.ForeignKey(
+        'self',
+        null=True,
+        default=None,
+        on_delete=models.SET_NULL,
+        related_name='replies',
+        db_index=True,  # so that querying `ping.replies` is efficient
+    )
 
     def __repr__(self):
         return "<Ping: {} @ {}>".format(self.user, self.created.isoformat())

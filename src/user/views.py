@@ -158,7 +158,7 @@ class UserViewSet(mixins.CreateModelMixin,
         # It appears to work, but at this would be an excellent candidate for
         # proper stress-testing at some point.
         user = self.get_object()
-        pings_qs = Ping.objects.filter(user=user).select_related('user')
+        pings_qs = Ping.objects.filter(user=user).select_related('user', 'replying_to')
         page = self.timeline_paginator.paginate_queryset(pings_qs, request)
         serializer = PingSerializer(
             page,

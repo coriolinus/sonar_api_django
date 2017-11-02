@@ -18,4 +18,4 @@ class TimelineViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         return Ping.objects.filter(
             Q(user=self.request.user) |
             Q(user__in=Subquery(follows.values('followed')))
-        ).select_related('user')
+        ).select_related('user', 'replying_to')
