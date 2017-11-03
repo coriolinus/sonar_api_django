@@ -1,4 +1,4 @@
-from user.models import User
+from user.models import Follows, User
 
 from common.testing import auth_key
 from django.urls import reverse
@@ -131,3 +131,180 @@ class UserTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(User.objects.get(username='test_user_1').blurb, '')
+
+    def create_user_simple(self, username):
+        return self.create_user({'username': username, 'password': 'awfuiois'})
+
+    def follow(self, follower, followee):
+        with auth_key(self.client, follower['token']) as auth_client:
+            return auth_client.post(
+                followee['url'] + 'follow/',
+                format='json',
+            )
+
+    def unfollow(self, unfollower, unfollowee):
+        with auth_key(self.client, unfollower['token']) as auth_client:
+            return auth_client.post(
+                unfollowee['url'] + 'unfollow/',
+                format='json',
+            )
+
+    def following_urls(self, as_user):
+        with auth_key(self.client, as_user['token']) as auth_client:
+            return {
+                result['url'] for result
+                in auth_client.get('/users/following/').data['results']
+            }
+
+    def followed_by_urls(self, as_user):
+        with auth_key(self.client, as_user['token']) as auth_client:
+            return {
+                result['url'] for result
+                in auth_client.get('/users/followed-by/').data['results']
+            }
+
+    def test_user_can_follow_another(self):
+        user1 = self.create_user_simple('user1').data
+        user2 = self.create_user_simple('user2').data
+
+        self.assertEqual(
+            Follows.objects.filter(follower__username='user1',
+                                   followed__username='user2').count(),
+            0
+        )
+        self.assertEqual(
+            Follows.objects.filter(follower__username='user2',
+                                   followed__username='user1').count(),
+            0
+        )
+        follow_resp = self.follow(user1, user2)
+        self.assertEqual(follow_resp.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(
+            Follows.objects.filter(follower__username='user1',
+                                   followed__username='user2').count(),
+            1
+        )
+        self.assertEqual(
+            Follows.objects.filter(follower__username='user2',
+                                   followed__username='user1').count(),
+            0
+        )
+        follow_resp = self.follow(user1, user2)
+        self.assertEqual(follow_resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            Follows.objects.filter(follower__username='user1',
+                                   followed__username='user2').count(),
+            1
+        )
+        self.assertEqual(
+            Follows.objects.filter(follower__username='user2',
+                                   followed__username='user1').count(),
+            0
+        )
+
+    def test_follow_stats(self):
+        user1 = self.create_user_simple('user1').data
+
+        stats = self.client.get(user1['url'] + 'follow-stats/').data
+        self.assertEqual(stats['following'], 0)
+        self.assertEqual(stats['followed'], 0)
+
+        user2 = self.create_user_simple('user2').data
+        self.follow(user1, user2)
+
+        stats = self.client.get(user1['url'] + 'follow-stats/').data
+        self.assertEqual(stats['following'], 1)
+        self.assertEqual(stats['followed'], 0)
+
+        stats = self.client.get(user2['url'] + 'follow-stats/').data
+        self.assertEqual(stats['following'], 0)
+        self.assertEqual(stats['followed'], 1)
+
+    def test_user_cannot_follow_self(self):
+        user = self.create_user_simple('user').data
+        follow_resp = self.follow(user, user)
+        self.assertEqual(follow_resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+        stats = self.client.get(user['url'] + 'follow-stats/').data
+        self.assertEqual(stats['following'], 0)
+        self.assertEqual(stats['followed'], 0)
+
+    def test_user_can_unfollow_another(self):
+        user1 = self.create_user_simple('user1').data
+        user2 = self.create_user_simple('user2').data
+
+        self.follow(user1, user2)
+        unfollow_resp = self.unfollow(user1, user2)
+        self.assertEqual(unfollow_resp.status_code, status.HTTP_204_NO_CONTENT)
+
+        stats = self.client.get(user1['url'] + 'follow-stats/').data
+        self.assertEqual(stats['following'], 0)
+        self.assertEqual(stats['followed'], 0)
+
+        stats = self.client.get(user2['url'] + 'follow-stats/').data
+        self.assertEqual(stats['following'], 0)
+        self.assertEqual(stats['followed'], 0)
+
+    def test_unfollow_not_already_followed(self):
+        user1 = self.create_user_simple('user1').data
+        user2 = self.create_user_simple('user2').data
+
+        unfollow_resp = self.unfollow(user1, user2)
+        self.assertEqual(unfollow_resp.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_user_cannot_unfollow_self(self):
+        user1 = self.create_user_simple('user1').data
+
+        unfollow_resp = self.unfollow(user1, user1)
+        self.assertEqual(unfollow_resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_following_view(self):
+        user1 = self.create_user_simple('user1').data
+        user2 = self.create_user_simple('user2').data
+        user3 = self.create_user_simple('user3').data
+
+        # user1 follows user2 but _not_ user3
+        # user2 follows user3 and user1
+        # user3 follows only user1
+        for follower, followees in (
+            (user1, [user2]),
+            (user2, [user3, user1]),
+            (user3, [user1])
+        ):
+            # set up fixture
+            for followee in followees:
+                self.follow(follower, followee)
+
+            # ensure that the right people show up in the following view
+            following_urls = self.following_urls(follower)
+            for followee in followees:
+                self.assertEqual({f['url'] for f in followees}, following_urls)
+
+    def test_followed_by_view(self):
+        user1 = self.create_user_simple('user1').data
+        user2 = self.create_user_simple('user2').data
+        user3 = self.create_user_simple('user3').data
+
+        # user1 follows user2 but _not_ user3
+        # user2 follows user3 and user1
+        # user3 follows only user1
+        for follower, followees in (
+            (user1, [user2]),
+            (user2, [user3, user1]),
+            (user3, [user1])
+        ):
+            # set up fixture
+            for followee in followees:
+                self.follow(follower, followee)
+
+        # therefore:
+        # user1 is followed by user2 and user3
+        # user2 is followed by user1
+        # user3 is followed by user2
+        for followed, followers in (
+            (user1, [user2, user3]),
+            (user2, [user1]),
+            (user3, [user2]),
+        ):
+            follower_urls = self.followed_by_urls(followed)
+            self.assertEqual({f['url'] for f in followers}, follower_urls)
