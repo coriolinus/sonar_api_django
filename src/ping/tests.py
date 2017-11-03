@@ -134,3 +134,76 @@ class PingTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(Ping.objects.count(), 0)
+
+    def create_reply(self, userkey, replied_to_data, text='i reply'):
+        with auth_key(self.client, userkey) as auth_client:
+            reply_url = replied_to_data['url'] + 'reply/'
+            return auth_client.post(
+                reply_url,
+                {'text': text},
+                format='json',
+            )
+
+    def test_users_can_reply_to_pings(self):
+        user1key = self.create_user('user1')
+        ping1data = self.create_ping(user1key).data
+
+        user2key = self.create_user('user2')
+        with auth_key(self.client, user2key) as auth_client:
+            reply_url = ping1data['url'] + 'reply/'
+            response = auth_client.post(
+                reply_url,
+                {'text': 'responding to a prior ping'},
+                format='json',
+            )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIsNot(response.data['replying_to'], None)
+
+    def test_ping_multiple_replies(self):
+        "Ensure that we can fetch multiple replies for a single ping"
+        user1 = self.create_user('user1')
+        user2 = self.create_user('user2')
+        user3 = self.create_user('user3')
+
+        p1 = self.create_ping(user1).data
+        p2 = self.create_reply(user2, p1).data
+        p3 = self.create_reply(user2, p1, 'another from me on this topic').data
+        p4 = self.create_reply(user3, p1).data
+
+        replies_urls = {result['url']
+                        for result
+                        in self.client.get(p1['url'] + 'replies/').data['results']}
+
+        for ping in (p2, p3, p4):
+            self.assertIn(ping['url'], replies_urls)
+
+    def test_reply_chain(self):
+        "Pings can reply to each other in arbitrary chains"
+        user_root = self.create_user('root')
+        user_left = self.create_user('left')
+        user_right = self.create_user('right')
+
+        root_ping = self.create_ping(user_root, 'root ping').data
+        left_1 = self.create_reply(user_left, root_ping, 'left 1').data
+        right_1 = self.create_reply(user_right, root_ping, 'right 1').data
+        left_2 = self.create_reply(user_left, right_1, 'left 2').data
+        right_2 = self.create_reply(user_right, right_1, 'right 2').data
+
+        for expect_replied_to, expect_replies in (
+            (root_ping, [left_1, right_1]),
+            (left_1, []),
+            (right_1, [left_2, right_2]),
+            (left_2, []),
+            (right_2, []),
+        ):
+            replies_urls = {
+                result['url']
+                for result
+                in self.client.get(
+                    expect_replied_to['url'] + 'replies/'
+                ).data['results']
+            }
+
+            for ping in expect_replies:
+                self.assertIn(ping['url'], replies_urls)
