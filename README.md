@@ -22,14 +22,15 @@ _We're not just ships passing in the night; we're submarines lost in the depths,
 
 These features need to be implemented in order for me to consider this a complete demo project.
 
-- [ ] mentions view showing people writing about/to you
+- [X] mentions view showing people writing about/to you
+- [X] hashtags / hashtag search view
 - [ ] block another user (they cannot see you when logged in; you cannot see them when logged in)
-- [ ] hashtags / hashtag search view
 
 ## Horizon features
 
 These features would be great, but probably won't happen unless this starts to get a real userbase.
 
+- [ ] hashtag overview view, sorting them all by popularity / date
 - [ ] proper property-based testing (see note below)
 - [ ] users can 'like' pings
 - [ ] liked pings view

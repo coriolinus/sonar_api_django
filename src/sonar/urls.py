@@ -16,6 +16,8 @@ Including another URLconf
 from user.views import UserViewSet
 
 from django.conf.urls import url
+from hashtags.views import HashtagViewSet
+from mentions.views import MentionsViewSet
 from ping.views import PingViewSet
 from rest_framework import routers
 from rest_framework.authtoken.views import obtain_auth_token
@@ -25,6 +27,8 @@ router = routers.DefaultRouter()
 router.register(r'users', UserViewSet)
 router.register(r'pings', PingViewSet)
 router.register(r'timeline', TimelineViewSet, 'timeline')
+router.register(r'mentions', MentionsViewSet, 'mentions')
+router.register(r'hashtags', HashtagViewSet, 'hashtag')
 
 urlpatterns = router.urls
 urlpatterns += [
