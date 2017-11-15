@@ -3,7 +3,7 @@ from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
 
 
-class CaseSensitiveUserManager(UserManager):
+class CaseInsensitiveUserManager(UserManager):
     def get_by_natural_key(self, username):
         case_insensitive_username_field = f"{self.model.USERNAME_FIELD}__iexact"
         return self.get(**{case_insensitive_username_field: username})
@@ -24,7 +24,7 @@ class User(AbstractUser):
     Also, we want usernames to be case-insensitive; per a Django wart,
     by default they're case-sensitive.
     """
-    objects = CaseSensitiveUserManager()
+    objects = CaseInsensitiveUserManager()
 
     blurb = models.CharField(
         max_length=settings.PING_LENGTH,
