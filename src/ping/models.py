@@ -3,6 +3,7 @@ from user.models import User
 from django.conf import settings
 from django.core.validators import MinLengthValidator
 from django.db import models
+from django.db.models import Subquery
 
 
 class Hashtag(models.Model):
@@ -84,3 +85,24 @@ class Ping(models.Model):
                 hashtags.add(hashtag)
         self.mentions.set(mentions)
         self.hashtags.set(hashtags)
+
+    @classmethod
+    def filter_unblocked(cls, qs, request):
+        """
+        Filters a queryset of Pings so it respects Block relations for the logged-in user
+        """
+        if request.user.is_authenticated:
+            # eliminate pings whose author has blocked this user
+            blocking_request_user = request.user.blocked_by.values('blocker')
+            qs = qs.exclude(user__in=Subquery(blocking_request_user))
+            # eliminate pings whose author this user has blocked
+            blocked_by_request_user = request.user.blocks.values('blocked')
+            qs = qs.exclude(user__in=Subquery(blocked_by_request_user))
+        return qs
+
+    @classmethod
+    def objects_unblocked(cls, request):
+        """
+        Returns a queryset respecting Block relations for the logged-in user.
+        """
+        return cls.filter_unblocked(cls.objects, request)

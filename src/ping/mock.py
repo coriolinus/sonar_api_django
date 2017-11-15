@@ -18,4 +18,4 @@ def create_ping_at(user, text, when):
 def gen_pings_for(user, qty, starting_at=None):
     "Generate qty random pings for user"
     for timestamp in islice(gen_times(base=starting_at), qty):
-        create_ping_at(user, gen_text(), timestamp)
+        create_ping_at(user, gen_text(hashtags=True, users=True), timestamp)

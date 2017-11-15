@@ -1,4 +1,4 @@
-from user.models import Follows, User
+from user.models import Follow, User
 
 from common.testing import TestToolsMixin
 from django.urls import reverse
@@ -118,36 +118,36 @@ class UserTests(TestToolsMixin, APITestCase):
         user2 = self.create_user('user2')
 
         self.assertEqual(
-            Follows.objects.filter(follower__username='user1',
+            Follow.objects.filter(follower__username='user1',
                                    followed__username='user2').count(),
             0
         )
         self.assertEqual(
-            Follows.objects.filter(follower__username='user2',
+            Follow.objects.filter(follower__username='user2',
                                    followed__username='user1').count(),
             0
         )
         follow_resp = self.follow(user1, user2)
         self.assertEqual(follow_resp.status_code, status.HTTP_201_CREATED)
         self.assertEqual(
-            Follows.objects.filter(follower__username='user1',
+            Follow.objects.filter(follower__username='user1',
                                    followed__username='user2').count(),
             1
         )
         self.assertEqual(
-            Follows.objects.filter(follower__username='user2',
+            Follow.objects.filter(follower__username='user2',
                                    followed__username='user1').count(),
             0
         )
         follow_resp = self.follow(user1, user2)
         self.assertEqual(follow_resp.status_code, status.HTTP_200_OK)
         self.assertEqual(
-            Follows.objects.filter(follower__username='user1',
+            Follow.objects.filter(follower__username='user1',
                                    followed__username='user2').count(),
             1
         )
         self.assertEqual(
-            Follows.objects.filter(follower__username='user2',
+            Follow.objects.filter(follower__username='user2',
                                    followed__username='user1').count(),
             0
         )

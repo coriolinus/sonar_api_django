@@ -24,7 +24,7 @@ These features need to be implemented in order for me to consider this a complet
 
 - [X] mentions view showing people writing about/to you
 - [X] hashtags / hashtag search view
-- [ ] block another user (they cannot see you when logged in; you cannot see them when logged in)
+- [X] block another user (they cannot see you when logged in; you cannot see them when logged in)
 
 ## Horizon features
 

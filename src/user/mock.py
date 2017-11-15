@@ -2,7 +2,7 @@ from datetime import timedelta
 from itertools import islice
 from random import choice, randint, sample
 from unittest import mock
-from user.models import Follows, User
+from user.models import Block, Follow, User
 
 from common.mock import WORDLIST, gen_text, gen_times
 from django.db import IntegrityError
@@ -38,7 +38,7 @@ def create_user_at(when):
         return None  # no problem; try again
 
 
-def create_users(qty):
+def create_users(qty, min_interval=timedelta(hours=2), max_interval=timedelta(days=2)):
     for timestamp in islice(gen_times(forwards=False,
                                       min_interval=timedelta(hours=2),
                                       max_interval=timedelta(days=2)),
@@ -57,18 +57,31 @@ def create_users(qty):
 
 def generate_follows(target_qty, clear_first=True):
     if clear_first:
-        Follows.objects.delete()
+        Follow.objects.all().delete()
     else:
-        target_qty += Follows.objects.count()
+        target_qty += Follow.objects.count()
     all_users = list(User.objects.all())
-    while Follows.objects.count() < target_qty:
+    while Follow.objects.count() < target_qty:
         origin, recipient = sample(all_users, 2)
-        Follows.objects.get_or_create(follower=origin, followed=recipient)
+        Follow.objects.get_or_create(follower=origin, followed=recipient)
 
 
-def populate(qty, clear_first=True, follows_per_user=16):
+def generate_blocks(target_qty, clear_first=True):
     if clear_first:
-        User.objects.delete()
-    create_users(qty)
+        Block.objects.all().delete()
+    else:
+        target_qty += Block.objects.count()
+    all_users = list(User.objects.all())
+    while Block.objects.count() < target_qty:
+        origin, recipient = sample(all_users, 2)
+        Block.objects.get_or_create(blocker=origin, blocked=recipient)
+
+
+def populate(qty, clear_first=True, follows_per_user=16, blocks_per_user=2):
+    if clear_first:
+        User.objects.all().delete()
+    create_users(qty, min_interval=timedelta(seconds=1), max_interval=timedelta(minutes=1))
     print("generating follows...")
     generate_follows(qty * follows_per_user, clear_first)
+    print("generating blocks...")
+    generate_blocks(qty * blocks_per_user, clear_first)

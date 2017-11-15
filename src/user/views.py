@@ -1,4 +1,4 @@
-from user.models import Follows, User
+from user.models import Block, Follow, User
 
 from common.pagination import Pagination128
 from common.permissions import IsOwnerOrReadOnly
@@ -75,9 +75,23 @@ class FollowSerializer(serializers.HyperlinkedModelSerializer):
     )
 
     class Meta:
-        model = Follows
+        model = Follow
         fields = read_only_fields = (
             'follower', 'followed', 'created'
+        )
+
+
+class BlockSerializer(serializers.HyperlinkedModelSerializer):
+    blocked = serializers.HyperlinkedRelatedField(
+        view_name='user-detail',
+        lookup_field='username',
+        read_only=True,
+    )
+
+    class Meta:
+        model = Block
+        fields = read_only_fields = (
+            'blocked', 'created'
         )
 
 
@@ -147,6 +161,13 @@ class UserViewSet(mixins.CreateModelMixin,
             self._followed_by_paginator = UserPaginator()
         return self._followed_by_paginator
 
+    @property
+    def blocking_paginator(self):
+        "Paginator for use with the blocking view"
+        if not hasattr(self, '_blocking_paginator'):
+            self._blocking_paginator = UserPaginator()
+        return self._blocking_paginator
+
     @detail_route()
     def timeline(self, request, username):
         """
@@ -176,7 +197,7 @@ class UserViewSet(mixins.CreateModelMixin,
         followed = self.get_object()
 
         if follower != followed:
-            follow, created = Follows.objects.get_or_create(follower=follower, followed=followed)
+            follow, created = Follow.objects.get_or_create(follower=follower, followed=followed)
             if created:
                 r_status = status.HTTP_201_CREATED
             else:
@@ -200,7 +221,7 @@ class UserViewSet(mixins.CreateModelMixin,
         followed = self.get_object()
 
         if follower != followed:
-            Follows.objects.filter(follower=follower, followed=followed).delete()
+            Follow.objects.filter(follower=follower, followed=followed).delete()
             return Response(
                 status=status.HTTP_204_NO_CONTENT
             )
@@ -216,8 +237,8 @@ class UserViewSet(mixins.CreateModelMixin,
         View which returns some follow statistics about the given user.
         """
         user = self.get_object()
-        following = Follows.objects.filter(follower=user).count()
-        followed = Follows.objects.filter(followed=user).count()
+        following = Follow.objects.filter(follower=user).count()
+        followed = Follow.objects.filter(followed=user).count()
         return Response({'following': following, 'followed': followed})
 
     @list_route(permission_classes=[IsAuthenticated])
@@ -247,3 +268,60 @@ class UserViewSet(mixins.CreateModelMixin,
             context={'request': request},
         )
         return self.followed_by_paginator.get_paginated_response(serializer.data)
+
+    @detail_route(methods=['post'], permission_classes=[IsAuthenticated])
+    def block(self, request, username):
+        """
+        View allowing the authenticated user to block this user.
+        """
+        blocker = request.user
+        blocked = self.get_object()
+
+        if blocker != blocked:
+            follow, created = Block.objects.get_or_create(blocker=blocker, blocked=blocked)
+            if created:
+                r_status = status.HTTP_201_CREATED
+            else:
+                r_status = status.HTTP_200_OK
+            return Response(
+                BlockSerializer(follow, context={'request': request}).data,
+                status=r_status
+            )
+        else:
+            return Response(
+                {'error': 'Cannot block oneself'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    @detail_route(methods=['post'], permission_classes=[IsAuthenticated])
+    def unblock(self, request, username):
+        """
+        View allowing the authenticated user to unblock this user.
+        """
+        blocker = request.user
+        blocked = self.get_object()
+
+        if blocker != blocked:
+            Block.objects.filter(blocker=blocker, blocked=blocked).delete()
+            return Response(
+                status=status.HTTP_204_NO_CONTENT
+            )
+        else:
+            return Response(
+                {'error': 'Cannot unblock oneself'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    @list_route(permission_classes=[IsAuthenticated])
+    def blocking(self, request):
+        """
+        View listing the users who the authenticated user is blocking
+        """
+        blocking_qs = User.objects.filter(blocked_by__blocker=request.user)
+        page = self.blocking_paginator.paginate_queryset(blocking_qs, request)
+        serializer = UserSerializer(
+            page,
+            many=True,
+            context={'request': request},
+        )
+        return self.blocking_paginator.get_paginated_response(serializer.data)

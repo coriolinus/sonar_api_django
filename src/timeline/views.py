@@ -1,4 +1,4 @@
-from user.models import Follows
+from user.models import Follow
 
 from common.pagination import Pagination128
 from django.db.models import Q, Subquery
@@ -14,8 +14,8 @@ class TimelineViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
-        follows = Follows.objects.filter(follower=self.request.user)
-        return Ping.objects.filter(
+        follows = Follow.objects.filter(follower=self.request.user)
+        return Ping.objects_unblocked(self.request).filter(
             Q(user=self.request.user) |
             Q(user__in=Subquery(follows.values('followed')))
         ).select_related('user', 'replying_to')

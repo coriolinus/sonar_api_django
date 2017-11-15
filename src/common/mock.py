@@ -1,11 +1,12 @@
 from datetime import timedelta
 from random import choices, randint
+from user.models import User
 
 from django.conf import settings
 from django.utils.timezone import now
 
 # these are the unique words from jabberwocky
-WORDLIST = [
+WORDLIST = {
     '--', 'all', 'and', 'arms', 'as', 'awhile', 'back', 'bandersnatch', 'beamish', 'beware',
     'bird', 'bite', 'blade', 'borogoves', 'boy', 'brillig', 'burbled', 'by', 'callay',
     'callooh', 'came', 'catch', 'chortled', 'claws', 'come', 'day', 'dead', 'did', 'eyes',
@@ -16,17 +17,36 @@ WORDLIST = [
     'that', 'the', 'thou', 'thought', 'through', 'time', 'to', 'took', 'toves', 'tree',
     'tulgey', 'tumtum', 'twas', 'two', 'uffish', 'vorpal', 'wabe', 'went', 'were',
     'whiffling', 'with', 'wood'
-]
+}
 try:
     with open('/usr/share/dict/words') as word_file:
-        WORDLIST.extend((word.strip() for word in word_file.readlines()))
+        WORDLIST.update((word.strip() for word in word_file.readlines()))
 except Exception:
     # we don't care what the problem is; we have a good default
     pass
+# remove plurals and possessives and convert to list
+WORDLIST = [
+    word for word in WORDLIST
+    if not (
+        ("'" in word) or
+        (word.endswith('s') and word[:-1] in WORDLIST) or
+        (word.endswith('es') and word[:-2] in WORDLIST) or
+        (word.endswith('ies') and word[:-3] + 'y' in WORDLIST)
+    )
+]
 
 
-def gen_text(length=settings.PING_LENGTH):
-    text = ' '.join(choices(WORDLIST, k=randint(1, (length // 6))))
+def gen_text(length=settings.PING_LENGTH, hashtags=False, users=False):
+    text_words = choices(WORDLIST, k=randint(1, (length // 6)))
+    if users:
+        usernames = set((u.username for u in User.objects.all()))
+        text_words = ['@' + w if w in usernames else w for w in text_words]
+    if hashtags:
+        text_words = [
+            '#' + w if (not w.startswith('@') and randint(0, 9) == 0) else w
+            for w in text_words
+        ]
+    text = ' '.join(text_words)
     if len(text) > length:
         last_space = text.rfind(' ', 0, length)
         if last_space == -1:

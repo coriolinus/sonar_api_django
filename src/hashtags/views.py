@@ -1,5 +1,5 @@
 from common.pagination import Pagination128
-from ping.models import Hashtag
+from ping.models import Hashtag, Ping
 from ping.views import PingSerializer
 from rest_framework import viewsets
 from rest_framework.response import Response
@@ -13,7 +13,10 @@ class HashtagViewSet(viewsets.GenericViewSet):
     def retrieve(self, request, *args, **kwargs):
         hashtag = self.get_object()
         return Response(self.get_serializer(
-            hashtag.in_pings.select_related('user'),
+            Ping.filter_unblocked(
+                hashtag.in_pings.select_related('user'),
+                self.request
+            ),
             many=True,
             context={'request': request},
         ).data)
