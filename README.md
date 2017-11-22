@@ -4,6 +4,8 @@ _We're not just ships passing in the night; we're submarines lost in the depths,
 
 `sonar` is a basic Twitter clone, intended to run on a free-tier AWS stack as a demonstration project for my portfolio. Still, maybe it could take off and turn me into an internet billionaire, right?
 
+Demo server is now running at <https://api.sonar.coriolinus.net/>. If your user-agent accepts HTML, you get a HTML interface; otherwise you get JSON. Note that this is an API server, not a user-facing server: HTML interfaces are for developer convenience, and feature auto-generated documentation which may be misleading or incorrect. The API does work as specified.
+
 ## Minimum Viable Product
 
 - [X] user signup / authentication
