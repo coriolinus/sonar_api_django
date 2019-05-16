@@ -54,5 +54,3 @@ Property-based tests are great, and I've had good results using the [Hypothesis]
 ## Architecture
 
 This project is the backend to the sonar website, implementing all features via a REST API. It's built in Python3 via Django and the Django Rest Framework.
-
-I'll build a frontend later, probably as a separate project.
